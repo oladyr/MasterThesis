@@ -1,0 +1,38 @@
+version: "3.8"
+services:
+    neo4j:
+        image: neo4j:4.3.3
+        container_name: neo4j_neo4jdocmanager
+        environment:
+            NEO4J_AUTH: neo4j/admin
+            NEO4JLABS_PLUGINS: '["apoc"]'
+        ports:
+            - 7474:7474
+            - 7687:7687
+        volumes:
+            - neo4j_data_volume:/data
+            
+    mongo:
+        image: mongo:3.6
+        container_name: mongo_neo4jdocmanager
+        environment:
+            MONGO_INITDB_ROOT_USERNAME: admin
+            MONGO_INITDB_ROOT_PASSWORD: admin
+        ports:
+            - 27017:27017      
+        volumes:
+            - mongo_data_volume:/data/db
+        command: mongod --replSet rs0 
+        healthcheck:
+            test: test $$(echo "rs.initiate().ok || rs.status().ok" | mongo -u admin -p admin --quiet) -eq 1
+        
+    neo4j-doc-manager:
+        image: oladyr/neo4j-doc-manager:1.0.0
+        container_name: neo4j-doc-manager
+        environment:
+            NEO4J_AUTH: neo4j:admin
+        tty: true
+
+volumes:
+    neo4j_data_volume:
+    mongo_data_volume:

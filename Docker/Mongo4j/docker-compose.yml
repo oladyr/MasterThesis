@@ -1,0 +1,41 @@
+version: "3.8"
+services:
+    neo4j:
+        image: neo4j:4.3.3
+        container_name: neo4j_mongo4j
+        environment:
+            NEO4J_AUTH: neo4j/admin
+            NEO4JLABS_PLUGINS: '["apoc"]'
+        ports:
+            - 7476:7474
+            - 7689:7687
+        volumes:
+            - neo4j_data_volume:/data
+
+    mongo4j:
+        image: oladyr/mongo4j:1.0.0
+        container_name: mongo4j
+        depends_on:
+          - neo4j
+          - mongo
+        environment:
+          MONGO_URI: mongodb://admin:admin@mongo:27017/test?authSource=admin
+          NEO_URI: bolt://neo4j:7687/
+          NEO_USER: neo4j
+          NEO_PASS: admin
+        tty: true        
+            
+    mongo:
+        image: mongo:3.6
+        container_name: mongo_mongo4j
+        environment:
+            MONGO_INITDB_ROOT_USERNAME: admin
+            MONGO_INITDB_ROOT_PASSWORD: admin
+        ports:
+            - 27019:27017      
+        volumes:
+            - mongo_data_volume:/data/db
+          
+volumes:
+    neo4j_data_volume:
+    mongo_data_volume:
