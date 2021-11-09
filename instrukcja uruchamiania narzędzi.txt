@@ -1,0 +1,33 @@
+Do realizacji poniższych kroków wymagany jest Docker.
+
+W celu uruchomienia poszczególnych narzędzi należy wykonać następujące kroki:
+
+- Neo4j Doc Manager:
+	1. w lokalizacji pliku docker-compose.yml wykonać komendę: docker-compose up
+	2. wejść do wnętrza kontenera narzędzia za pomocą: docker exec -ti neo4j-doc-manager /bin/bash
+	3. uruchomić Mongo Connector wykonując wewnątrz kontenera narzędzia komendę: 
+		mongo-connector -m mongo:27017 -a admin -p admin -t http://neo4j:7474/db/data -d neo4j_doc_manager
+	
+- Doc2graph:
+	1. w lokalizacji pliku docker-compose.yml wykonać komendę: docker-compose up
+	2. skopiować plik neo4j-json-1.0.0-shaded.jar do katalogu "plugins" wewnątrz kontenera bazy Neo4j: 
+		docker cp <lokalizacja_pliku>\neo4j-json-1.0.0-shaded.jar neo4j_doc2graph:/var/lib/neo4j/plugins/
+	3. dodać konfigurację wykonując zapytanie dla bazy Neo4j:
+		CREATE (n:JSON_CONFIG {
+        configuration: 'byNode'
+        ,root_node_key_property:'_id'
+        ,document_default_label:'DocNode'
+        ,document_id_builder:'org.neo4j.helpers.json.document.impl.DocumentIdBuilderId'
+        ,document_relation_builder:'org.neo4j.helpers.json.document.impl.DocumentRelationBuilderByKey'
+        ,document_label_builder:'org.neo4j.helpers.json.document.impl.DocumentLabelBuilderById'
+		,log_discard_events: false
+        })
+	4. uruchomić ponownie kontener z bazą Neo4j: docker restart neo4j_doc2graph
+	5. wejść do wnętrza kontenera narzędzia za pomocą: docker exec -ti doc2graph /bin/bash
+	6. uruchomić Mongo Connector wykonując wewnątrz kontenera narzędzia komendę:
+		mongo-connector -m mongo:27017 -a admin -p admin -t http://neo4j:7474/db/data -d neo4j_json_doc_manager
+		
+- Mongo4j:
+	1. w lokalizacji pliku docker-compose.yml wykonać komendę: docker-compose up
+	2. wejść do wnętrza kontenera narzędzia za pomocą: docker exec -ti mongo4j /bin/bash
+	3. operacje replikacji można zrealizować wykonując pliki .js w katalogu home/mongo4j za pomocą polecenia: node <nazwa_pliku>.js
